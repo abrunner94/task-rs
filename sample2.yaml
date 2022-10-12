@@ -1,0 +1,18 @@
+name: very cool task file
+tasks:
+  hello:
+    cmds:
+      - python test.py
+      - echo "hello"
+      - echo "blabla"
+  again:
+    cmds:
+      - python test.py
+      - echo yay!
+      - node bla.js
+  another:
+    depends_on: sample3.yaml
+    cmds:
+      - python test.py
+      - echo yay!
+      - node bla.js
