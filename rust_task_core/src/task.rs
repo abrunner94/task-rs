@@ -24,13 +24,13 @@ impl TaskCommand {
 }
 
 #[derive(Debug, Default)]
-pub struct TaskRunner {
+pub struct Task {
     name: &'static str,
-    commands: Vec<String>,
+    commands: Vec<TaskCommand>,
     new_commands: Vec<TaskCommand>,
 }
 
-impl TaskRunner {
+impl Task {
     pub fn builder() -> TaskBuilder {
         TaskBuilder::default()
     }
@@ -48,7 +48,7 @@ impl TaskRunner {
 #[derive(Default)]
 pub struct TaskBuilder {
     name: &'static str,
-    commands: Vec<String>,
+    commands: Vec<TaskCommand>,
     new_commands: Vec<TaskCommand>,
 }
 
@@ -62,13 +62,14 @@ impl TaskBuilder {
         self
     }
 
-    pub fn add_command(mut self, command: String) -> TaskBuilder {
-        self.commands.push(command);
+    pub fn add_command(mut self, command: &'static str) -> TaskBuilder {
+        let cmd = TaskCommand::new(command);
+        self.commands.push(cmd);
         self
     }
 
-    pub fn build(self) -> TaskRunner {
-        TaskRunner {
+    pub fn build(self) -> Task {
+        Task {
             name: self.name,
             commands: self.commands,
             new_commands: self.new_commands
