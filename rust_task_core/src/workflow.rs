@@ -26,31 +26,23 @@ impl Workflow {
 
         let mut workflow_tasks: Vec<Task> = Vec::new();
 
-        for (task, command_mapping) in tasks.as_mapping().cloned().unwrap().into_iter() {
-            println!("{:?}", task);
-
-            let commands = command_mapping["cmds"].as_sequence().unwrap().to_vec();
-            let commands_as_str: Vec<String> = commands.into_iter().map(|c|  String::from(c.as_str().unwrap())).collect();
-
-            // println!("{:?}, {:?}", task_name.as_str().unwrap(), commands_as_str);
+        for (task, command_mapping) in tasks.as_mapping().unwrap().into_iter() {
+            let commands = command_mapping["cmds"].as_sequence().unwrap();
+            let commands_as_str: Vec<String> = commands
+                .into_iter()
+                .map(|c|  String::from(c.as_str().unwrap()))
+                .collect();
 
             workflow_tasks.push(
-            TaskBuilder::new("bla".to_string())
-                .commands_from_string_vec(commands_as_str)
-                .build()
+            TaskBuilder::new(String::from(task.as_str().unwrap()))
+                    .commands_from_string_vec(commands_as_str)
+                    .build()
             )
-
         }
 
-        // Workflow {
-        //     name: String::from("bla"),
-        //     tasks: vec![]
-        // }
-        let workflow = WorkflowBuilder::new(String::from(workflow_name.as_str().unwrap()))
+        WorkflowBuilder::new(String::from(workflow_name.as_str().unwrap()))
             .add_tasks(workflow_tasks)
-            .build();
-
-        workflow
+            .build()
     }
 }
 

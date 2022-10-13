@@ -67,8 +67,6 @@ impl TaskBuilder {
             .map(|c| TaskCommand::new(c))
             .collect();
 
-        println!("{:?}", cmds);
-
         self.new_commands = cmds;
         self
     }
@@ -88,20 +86,3 @@ impl TaskBuilder {
     }
 }
 
-//
-// pub fn parse_and_run_tasks() {
-//     init_builtin_logger();
-//
-//     let task_file = load_task_file("/Users/abrunner/CLionProjects/rust-task/sample2.yaml");
-//     let tasks =  &task_file[0]["tasks"].as_hash().unwrap();
-//
-//     for (task_name, commands) in tasks.iter() {
-//         let command_list = commands["cmds"].as_vec().unwrap();
-//         for command in command_list.iter() {
-//             let cmd = snailquote::unescape(command.as_str().unwrap()).unwrap();
-//             if run_cmd!(bash -c "$cmd").is_err() {
-//                 println!("errored")
-//             }
-//         }
-//     }
-// }

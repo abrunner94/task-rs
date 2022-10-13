@@ -35,7 +35,7 @@ fn main() {
     //     task.start();
     // }
 
-    let file = "/Users/alexanderbrunner/CLionProjects/rust-task/sample2.yaml";
+    let file = "/Users/alexanderbrunner/CLionProjects/rust-task/sample.yaml";
     let mut workflow = Workflow::from_file(file);
     workflow.start();
 }
