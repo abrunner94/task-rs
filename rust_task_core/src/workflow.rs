@@ -1,12 +1,10 @@
-use std::borrow::{Borrow, BorrowMut};
+use std::borrow::Borrow;
 use std::hash::Hash;
-use serde::__private::de::Borrowed;
-use yaml_rust::{Yaml, YamlLoader};
-use crate::{load_task_file, run_cmd, Task, TaskBuilder, TaskCommand};
+use crate::{ run_cmd, Task, TaskBuilder, TaskCommand};
 
 #[derive(Default, Debug)]
 pub struct Workflow {
-    name: &'static str,
+    name: String,
     tasks: Vec<Task>
 }
 
@@ -19,44 +17,51 @@ impl Workflow {
         }
     }
 
-    pub fn from_file(file_name: String, workflow_name: &'_ str) -> Workflow {
-        // let task_file = load_task_file(file_name.as_str()).clone();
-        // let mut task_hash = &task_file[0]["tasks"].as_hash().unwrap();
-        // let mut w_tasks: Vec<Task> = vec![];
-        // let workflow_builder: WorkflowBuilder = WorkflowBuilder::new("bla");
-        //
-        // for (task_name, commands) in task_hash.iter() {
-        //     let command_list = commands["cmds"].as_vec().unwrap().to_vec();
-        //     for command in command_list.iter() {
-        //         let cmd = snailquote::unescape(command.as_str().unwrap()).unwrap();
-        //         w_tasks.push(
-        //             TaskBuilder::new(task_name.as_str().unwrap())
-        //                 .add_command(cmd.as_str())
-        //                 .build()
-        //         )
-        //     }
-        // }
+    pub fn from_file(file_name: &str) -> Workflow {
+        let file = std::fs::File::open(file_name).expect("could not open file");
+        let yaml: serde_yaml::Value = serde_yaml::from_reader(file).expect("could not read yaml file");
 
-        Workflow {
-            tasks: vec![],
-            name: "t"
+        let tasks = &yaml["tasks"];
+        let workflow_name = &yaml["name"];
+
+        let mut workflow_tasks: Vec<Task> = Vec::new();
+
+        for (task, command_mapping) in tasks.as_mapping().cloned().unwrap().into_iter() {
+            println!("{:?}", task);
+
+            let commands = command_mapping["cmds"].as_sequence().unwrap().to_vec();
+            let commands_as_str: Vec<String> = commands.into_iter().map(|c|  String::from(c.as_str().unwrap())).collect();
+
+            // println!("{:?}, {:?}", task_name.as_str().unwrap(), commands_as_str);
+
+            workflow_tasks.push(
+            TaskBuilder::new("bla".to_string())
+                .commands_from_string_vec(commands_as_str)
+                .build()
+            )
+
         }
-    }
 
-    fn load_task_file(file_name: String) -> Vec<Yaml> {
-        let mut file = std::fs::read_to_string(file_name).unwrap();
-        return YamlLoader::load_from_str(&file).unwrap();
+        // Workflow {
+        //     name: String::from("bla"),
+        //     tasks: vec![]
+        // }
+        let workflow = WorkflowBuilder::new(String::from(workflow_name.as_str().unwrap()))
+            .add_tasks(workflow_tasks)
+            .build();
+
+        workflow
     }
 }
 
 #[derive(Default, Debug)]
 pub struct WorkflowBuilder {
-    name: &'static str,
+    name: String,
     tasks: Vec<Task>
 }
 
 impl WorkflowBuilder {
-    pub fn new(name: &'static str) -> WorkflowBuilder {
+    pub fn new(name: String) -> WorkflowBuilder {
         WorkflowBuilder { name, tasks: vec![] }
     }
 

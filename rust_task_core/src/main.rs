@@ -1,10 +1,5 @@
-#![deny(elided_lifetimes_in_paths)]
-
-use std::borrow::{Borrow, BorrowMut};
 use cmd_lib::{init_builtin_logger, run_cmd, run_fun};
-use yaml_rust::Yaml;
-use crate::task::{load_task_file, parse_and_run_tasks, TaskBuilder, TaskCommand, Task};
-use snailquote;
+use crate::task::{TaskBuilder, TaskCommand, Task};
 use crate::workflow::{Workflow, WorkflowBuilder};
 
 mod task;
@@ -12,15 +7,15 @@ mod workflow;
 
 fn main() {
     let mut commands: Vec<TaskCommand> = vec![
-        TaskCommand::new("python test.py"),
-        TaskCommand::new("echo \"hello\""),
-        TaskCommand::new("node bla.js"),
+        TaskCommand::new(String::from("python test.py")),
+        TaskCommand::new(String::from("echo \"hello\"")),
+        TaskCommand::new(String::from("node bla.js")),
     ];
 
-    let task1: Task = TaskBuilder::new("sample task1")
+    let task1: Task = TaskBuilder::new("sample task1".to_string())
         .commands(commands.to_vec())
         .build();
-    let task2: Task = TaskBuilder::new("sample task2")
+    let task2: Task = TaskBuilder::new("sample task2".to_string())
         .commands(commands.to_vec())
         .build();
 
@@ -40,7 +35,7 @@ fn main() {
     //     task.start();
     // }
 
-    let file = String::from("/Users/abrunner/CLionProjects/rust-task/sample2.yaml");
-    let mut workflow = Workflow::from_file(file, "test workflow");
+    let file = "/Users/alexanderbrunner/CLionProjects/rust-task/sample2.yaml";
+    let mut workflow = Workflow::from_file(file);
     workflow.start();
 }
