@@ -1,8 +1,10 @@
 use std::borrow::Borrow;
+use std::fs::File;
 use std::hash::Hash;
+use serde::{Serialize, Deserialize};
 use crate::{ run_cmd, Task, TaskBuilder, TaskCommand};
 
-#[derive(Default, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct Workflow {
     name: String,
     tasks: Vec<Task>
@@ -11,15 +13,38 @@ pub struct Workflow {
 impl Workflow {
     pub fn builder() -> WorkflowBuilder { WorkflowBuilder::default() }
 
-    pub fn start(&mut self) {
+    pub fn start(mut self) {
         for task in self.tasks.iter_mut() {
             task.start();
         }
     }
 
+    pub fn to_file(mut self, file_name: &str) -> Workflow {
+        let workflow = Workflow {
+            name: self.name,
+            tasks: self.tasks
+        };
+
+        let yaml = serde_yaml::to_string(&workflow)
+            .expect("could not convert struct to string");
+
+        let f = std::fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(file_name)
+            .expect("could not open file");
+        serde_yaml::to_writer(f, &yaml).expect("could not write yaml file");
+
+        workflow
+    }
+
     pub fn from_file(file_name: &str) -> Workflow {
-        let file = std::fs::File::open(file_name).expect("could not open file");
-        let yaml: serde_yaml::Value = serde_yaml::from_reader(file).expect("could not read yaml file");
+        let file = File::open(file_name)
+            .expect("could not open file");
+        let yaml: serde_yaml::Value = serde_yaml::from_reader(file)
+            .expect("could not read yaml file");
+
+        println!("{:?}", yaml);
 
         let tasks = &yaml["tasks"];
         let workflow_name = &yaml["name"];
@@ -46,7 +71,7 @@ impl Workflow {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct WorkflowBuilder {
     name: String,
     tasks: Vec<Task>

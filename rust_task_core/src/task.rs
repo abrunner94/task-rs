@@ -1,17 +1,12 @@
-use std::any::Any;
-use std::ffi::OsString;
 use std::io::{Read, Write, Result};
 use std::path::Path;
 use cmd_lib::{AsOsStr, Cmd, CmdEnv, CmdResult, Cmds, CmdString, FunResult, GroupCmds, init_builtin_logger, run_fun, use_custom_cmd};
-use proc_macro2::{TokenStream, TokenTree};
-use quote::{quote, ToTokens};
 use serde_yaml::Value;
-use syn::__private::TokenStream2;
-use syn::parse2;
-use syn::parse::Nothing;
 use crate::run_cmd;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Default, Clone)]
+
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct TaskCommand {
     command: String
 }
@@ -22,11 +17,10 @@ impl TaskCommand {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct Task {
     name: String,
-    commands: Vec<TaskCommand>,
-    new_commands: Vec<TaskCommand>,
+    cmds: Vec<TaskCommand>,
 }
 
 impl Task {
@@ -35,7 +29,7 @@ impl Task {
     }
 
     pub fn start(&mut self) {
-        for command in self.new_commands.iter() {
+        for command in self.cmds.iter() {
             let cmd = &command.command;
             if run_cmd!(bash -c $cmd).is_err() {
                 println!("errored")
@@ -44,20 +38,19 @@ impl Task {
     }
 }
 
-#[derive(Default)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct TaskBuilder {
     name: String,
-    commands: Vec<TaskCommand>,
-    new_commands: Vec<TaskCommand>,
+    cmds: Vec<TaskCommand>,
 }
 
 impl TaskBuilder {
     pub fn new(name: String) -> TaskBuilder {
-        TaskBuilder { name, commands: vec![], new_commands: vec![] }
+        TaskBuilder { name, cmds: vec![] }
     }
 
     pub fn commands(mut self, commands: Vec<TaskCommand>) -> TaskBuilder {
-        self.new_commands = commands;
+        self.cmds = commands;
         self
     }
 
@@ -67,21 +60,20 @@ impl TaskBuilder {
             .map(|c| TaskCommand::new(c))
             .collect();
 
-        self.new_commands = cmds;
+        self.cmds = cmds;
         self
     }
 
     pub fn add_command(mut self, command: String) -> TaskBuilder {
         let cmd = TaskCommand::new(command);
-        self.commands.push(cmd);
+        self.cmds.push(cmd);
         self
     }
 
     pub fn build(self) -> Task {
         Task {
             name: self.name,
-            commands: self.commands,
-            new_commands: self.new_commands
+            cmds: self.cmds
         }
     }
 }
