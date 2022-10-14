@@ -1,14 +1,10 @@
-use std::io::{Read, Write, Result};
-use std::path::Path;
-use cmd_lib::{AsOsStr, Cmd, CmdEnv, CmdResult, Cmds, CmdString, FunResult, GroupCmds, init_builtin_logger, run_fun, use_custom_cmd};
-use serde_yaml::Value;
-use crate::run_cmd;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
+use crate::run_cmd;
 
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct TaskCommand {
-    command: String
+    command: String,
 }
 
 impl TaskCommand {
@@ -55,10 +51,7 @@ impl TaskBuilder {
     }
 
     pub fn commands_from_string_vec(mut self, commands: Vec<String>) -> TaskBuilder {
-        let mut cmds = commands
-            .into_iter()
-            .map(|c| TaskCommand::new(c))
-            .collect();
+        let cmds = commands.into_iter().map(TaskCommand::new).collect();
 
         self.cmds = cmds;
         self
@@ -73,8 +66,7 @@ impl TaskBuilder {
     pub fn build(self) -> Task {
         Task {
             name: self.name,
-            cmds: self.cmds
+            cmds: self.cmds,
         }
     }
 }
-

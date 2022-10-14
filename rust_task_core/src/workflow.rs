@@ -1,17 +1,19 @@
-use std::borrow::Borrow;
 use std::fs::File;
-use std::hash::Hash;
-use serde::{Serialize, Deserialize};
-use crate::{ run_cmd, Task, TaskBuilder, TaskCommand};
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+use serde::{Deserialize, Serialize};
+
+use crate::{Task, TaskBuilder};
+
+#[derive(Default, Serialize, Debug)]
 pub struct Workflow {
     name: String,
-    tasks: Vec<Task>
+    tasks: Vec<Task>,
 }
 
 impl Workflow {
-    pub fn builder() -> WorkflowBuilder { WorkflowBuilder::default() }
+    pub fn builder() -> WorkflowBuilder {
+        WorkflowBuilder::default()
+    }
 
     pub fn start(mut self) {
         for task in self.tasks.iter_mut() {
@@ -22,11 +24,10 @@ impl Workflow {
     pub fn to_file(mut self, file_name: &str) -> Workflow {
         let workflow = Workflow {
             name: self.name,
-            tasks: self.tasks
+            tasks: self.tasks,
         };
 
-        let yaml = serde_yaml::to_string(&workflow)
-            .expect("could not convert struct to string");
+        let yaml = serde_yaml::to_value(&workflow).expect("could not convert struct to string");
 
         let f = std::fs::OpenOptions::new()
             .write(true)
@@ -39,29 +40,29 @@ impl Workflow {
     }
 
     pub fn from_file(file_name: &str) -> Workflow {
-        let file = File::open(file_name)
-            .expect("could not open file");
-        let yaml: serde_yaml::Value = serde_yaml::from_reader(file)
-            .expect("could not read yaml file");
-
-        println!("{:?}", yaml);
+        let file = File::open(file_name).expect("could not open file");
+        let yaml: serde_yaml::Value =
+            serde_yaml::from_reader(file).expect("could not read yaml file");
 
         let tasks = &yaml["tasks"];
         let workflow_name = &yaml["name"];
-
         let mut workflow_tasks: Vec<Task> = Vec::new();
 
-        for (task, command_mapping) in tasks.as_mapping().unwrap().into_iter() {
-            let commands = command_mapping["cmds"].as_sequence().unwrap();
+        for task in tasks.as_sequence().unwrap().iter() {
+            let commands = task["cmds"].as_sequence().unwrap();
+
             let commands_as_str: Vec<String> = commands
-                .into_iter()
-                .map(|c|  String::from(c.as_str().unwrap()))
+                .iter()
+                .map(|c| {
+                    let value = c.get("command").unwrap().as_str();
+                    String::from(value.unwrap())
+                })
                 .collect();
 
             workflow_tasks.push(
-            TaskBuilder::new(String::from(task.as_str().unwrap()))
+                TaskBuilder::new(String::from(task["name"].as_str().unwrap()))
                     .commands_from_string_vec(commands_as_str)
-                    .build()
+                    .build(),
             )
         }
 
@@ -74,12 +75,15 @@ impl Workflow {
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct WorkflowBuilder {
     name: String,
-    tasks: Vec<Task>
+    tasks: Vec<Task>,
 }
 
 impl WorkflowBuilder {
     pub fn new(name: String) -> WorkflowBuilder {
-        WorkflowBuilder { name, tasks: vec![] }
+        WorkflowBuilder {
+            name,
+            tasks: vec![],
+        }
     }
 
     pub fn add_task(mut self, task: Task) -> WorkflowBuilder {
@@ -93,7 +97,9 @@ impl WorkflowBuilder {
     }
 
     pub fn build(self) -> Workflow {
-        Workflow { name: self.name, tasks: self.tasks }
+        Workflow {
+            name: self.name,
+            tasks: self.tasks,
+        }
     }
 }
-
