@@ -54,14 +54,14 @@ impl Workflow {
             let commands_as_str: Vec<String> = commands
                 .iter()
                 .map(|c| {
-                    let value = c.get("command").unwrap().as_str();
+                    let value = c.as_str();
                     String::from(value.unwrap())
                 })
                 .collect();
 
             workflow_tasks.push(
                 TaskBuilder::new(String::from(task["name"].as_str().unwrap()))
-                    .commands_from_string_vec(commands_as_str)
+                    .commands(commands_as_str)
                     .build(),
             )
         }
