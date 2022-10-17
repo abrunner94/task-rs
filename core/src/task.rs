@@ -16,6 +16,7 @@ impl Task {
     pub fn start(&mut self) {
         for command in self.cmds.iter() {
             let cmd = &command;
+            // TODO: Add Windows powershell support
             if run_cmd!(bash -c $cmd).is_err() {
                 println!("errored")
             }
