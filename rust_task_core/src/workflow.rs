@@ -17,19 +17,21 @@ impl Workflow {
     }
 
     pub fn start(mut self, task_name: Option<String>) {
-        // match task_name {
-        //     None => {
-        //         for task in self.tasks.iter_mut() {
-        //             task.start();
-        //         }
-        //     }
-        //     Some(_) => {
-        //         let task_to_run: Task = self.tasks
-        //             .into_iter()
-        //             .filter(|t| t.name.eq(task_name.unwrap().as_str()))
-        //             .collect();
-        //     }
-        // }
+        match task_name {
+            None => { self.tasks.iter_mut().for_each(|t| t.start()); }
+            Some(_) => {
+                let mut task_to_run: Vec<Task> = self.tasks
+                    .into_iter()
+                    .filter(|t| t.name.eq(task_name.as_ref().unwrap().as_str()))
+                    .collect();
+
+                if !task_to_run.is_empty() {
+                    task_to_run.iter_mut().for_each(|t| t.start());
+                } else {
+                    println!("No tasks to run");
+                }
+            }
+        }
     }
 
     pub fn to_file(mut self, file_name: &str) -> Workflow {

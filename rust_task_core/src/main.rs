@@ -26,12 +26,12 @@ fn main() {
     //     .add_task(task1)
     //     .add_task(task2)
     //     .build()
-    //     .to_file("/Users/alexanderbrunner/CLionProjects/rust-task/sample_to_file5.yaml")
-    //     .start();
+    //     .to_file("/Users/abrunner/CLionProjects/rust-task/sample_to_file5.yaml")
+    //     .start(None);
 
     // Read workflow from file
-    let file = "/Users/alexanderbrunner/CLionProjects/rust-task/sample_to_file4.yaml";
-    Workflow::from_file(file).start();
+    let file = "/Users/abrunner/CLionProjects/rust-task/sample_to_file5.yaml";
+    Workflow::from_file(file).start(None);
 
     // Write workflow to file
     // WorkflowBuilder::new("test".to_string())

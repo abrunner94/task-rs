@@ -8,15 +8,6 @@ pub struct Task {
     pub cmds: Vec<String>,
 }
 
-// impl<'a> FromIterator for &'a Task {
-//     type Item = u64;
-//     type FromIter = iter::Copied<iter::Rev<slice::Iter<'a, Self::Item>>>;
-//
-//     fn from_iter(mut self) -> Self::FromIter {
-//         self.name.iter().rev().copied()
-//     }
-// }
-
 impl Task {
     pub fn builder() -> TaskBuilder {
         TaskBuilder::default()
