@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
 
@@ -15,10 +16,20 @@ impl Workflow {
         WorkflowBuilder::default()
     }
 
-    pub fn start(mut self) {
-        for task in self.tasks.iter_mut() {
-            task.start();
-        }
+    pub fn start(mut self, task_name: Option<String>) {
+        // match task_name {
+        //     None => {
+        //         for task in self.tasks.iter_mut() {
+        //             task.start();
+        //         }
+        //     }
+        //     Some(_) => {
+        //         let task_to_run: Task = self.tasks
+        //             .into_iter()
+        //             .filter(|t| t.name.eq(task_name.unwrap().as_str()))
+        //             .collect();
+        //     }
+        // }
     }
 
     pub fn to_file(mut self, file_name: &str) -> Workflow {
