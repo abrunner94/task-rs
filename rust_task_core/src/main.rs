@@ -1,41 +1,41 @@
-use crate::task::{Task, TaskBuilder, TaskCommand};
+use crate::task::{Task, TaskBuilder};
 use crate::workflow::{Workflow, WorkflowBuilder};
-use cmd_lib::{init_builtin_logger, run_cmd, run_fun};
 
 mod task;
 mod workflow;
 
 fn main() {
     // Create commands
-    let commands1: Vec<TaskCommand> = vec![
-        TaskCommand::new(String::from("python test.py")),
-        TaskCommand::new(String::from("node test.js")),
+    let commands1: Vec<String> = vec![
+        "python test.py".to_string(),
+        "node test.js".to_string(),
     ];
 
-    let commands2: Vec<TaskCommand> = vec![TaskCommand::new(String::from("echo \"hello\""))];
+    let commands2: Vec<String> = vec!["echo \"hello\"".to_string()];
 
-    // Create tasks
+    // Build up your tasks using commands
     let task1: Task = TaskBuilder::new("sample task1".to_string())
-        .commands(commands1.to_vec())
+        .commands(commands1)
         .build();
     let task2: Task = TaskBuilder::new("sample task2".to_string())
-        .commands(commands2.to_vec())
+        .commands(commands2)
         .build();
 
-    // Create workflows
-    // WorkflowBuilder::new("my workflow")
+    // Create workflow with tasks and start it
+    // WorkflowBuilder::new("my workflow".to_string())
     //     .add_task(task1)
     //     .add_task(task2)
     //     .build()
-    //     .start();
+    //     .to_file("/Users/abrunner/CLionProjects/rust-task/sample_to_file5.yaml")
+    //     .start(None);
 
     // Read workflow from file
-    let file = "/Users/alexanderbrunner/CLionProjects/rust-task/sample_to_file2.yaml";
-    Workflow::from_file(file).start();
+    let file = "/Users/abrunner/CLionProjects/rust-task/sample_to_file5.yaml";
+    Workflow::from_file(file).start(None);
 
     // Write workflow to file
     // WorkflowBuilder::new("test".to_string())
     //     .add_tasks(vec![task1, task2])
     //     .build()
-    //     .to_file("/Users/alexanderbrunner/CLionProjects/rust-task/sample_to_file2.yaml");
+    //     .to_file("/Users/alexanderbrunner/CLionProjects/rust-task/sample_to_file4.yaml");
 }

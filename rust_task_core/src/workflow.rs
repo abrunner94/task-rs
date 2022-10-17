@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
 
@@ -15,9 +16,21 @@ impl Workflow {
         WorkflowBuilder::default()
     }
 
-    pub fn start(mut self) {
-        for task in self.tasks.iter_mut() {
-            task.start();
+    pub fn start(mut self, task_name: Option<String>) {
+        match task_name {
+            None => { self.tasks.iter_mut().for_each(|t| t.start()); }
+            Some(_) => {
+                let mut task_to_run: Vec<Task> = self.tasks
+                    .into_iter()
+                    .filter(|t| t.name.eq(task_name.as_ref().unwrap().as_str()))
+                    .collect();
+
+                if !task_to_run.is_empty() {
+                    task_to_run.iter_mut().for_each(|t| t.start());
+                } else {
+                    println!("No tasks to run");
+                }
+            }
         }
     }
 
@@ -54,14 +67,14 @@ impl Workflow {
             let commands_as_str: Vec<String> = commands
                 .iter()
                 .map(|c| {
-                    let value = c.get("command").unwrap().as_str();
+                    let value = c.as_str();
                     String::from(value.unwrap())
                 })
                 .collect();
 
             workflow_tasks.push(
                 TaskBuilder::new(String::from(task["name"].as_str().unwrap()))
-                    .commands_from_string_vec(commands_as_str)
+                    .commands(commands_as_str)
                     .build(),
             )
         }
