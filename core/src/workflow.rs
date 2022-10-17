@@ -2,8 +2,7 @@ use std::fs::File;
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
-
-use crate::{Task, TaskBuilder};
+use crate::task::{Task, TaskBuilder};
 
 #[derive(Default, Serialize, Debug)]
 pub struct Workflow {
@@ -28,7 +27,7 @@ impl Workflow {
                 if !task_to_run.is_empty() {
                     task_to_run.iter_mut().for_each(|t| t.start());
                 } else {
-                    println!("No tasks to run");
+                    log::info!("No tasks to run");
                 }
             }
         }

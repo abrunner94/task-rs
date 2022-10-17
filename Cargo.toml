@@ -1,5 +1,6 @@
 [workspace]
 members = [
-    "rust_task_core",
-    "rust_task_macros"
+    "core",
+    "macros",
+    "cli"
 ]
