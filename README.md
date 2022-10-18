@@ -16,20 +16,20 @@ Workflows are composed of tasks containing one or more commands and are defined 
 
 ### Create a workflow
 ```bash
-task create --file workfile.yaml
+task create -n workfile.yaml
 ```
 
 ### Run the whole workflow
 ```bash
-task run workfile.yaml 
+task run -f workfile.yaml 
 ```
 
 ### Run specific tasks in the workflow file
 ```bash
-task run workfile.yaml --task mytask
+task run -f workfile.yaml -t mytask
 ```
 
 ### Run multiple workflow files
 ```bash
-task run --w workfile1.yaml workfile2.yaml workfile3.yaml
+task run -f workfile1.yaml,workfile2.yaml,workfile3.yaml
 ```

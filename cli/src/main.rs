@@ -1,10 +1,10 @@
-use clap::{arg, command, Command};
+use clap::{arg, Arg, command, Command};
 use simple_logger::SimpleLogger;
 
 use core::task::TaskBuilder;
 use core::workflow::{Workflow, WorkflowBuilder};
 
-use crate::commands::{subcommand_create_workflow_file, subcommand_run_workflow_files};
+use crate::commands::{create_workflow_file, run_workflow_files};
 
 mod examples;
 mod commands;
@@ -19,22 +19,30 @@ fn main() {
         .subcommand(
             Command::new("create")
                 .about("Creates a new workfile")
-                .arg(arg!(-n --name <NAME> "a required name for your workfile")),
+                .arg(Arg::new("name")
+                    .help("a required name for your new workfile")
+                    .short('n')
+                    .long("name")
+                    .ignore_case(true)
+                )
         )
         .subcommand(
             Command::new("run")
                 .about("Runs a workfile")
-                .arg(arg!(-f --file <FILE> "a required workfile to run")),
+                .arg(
+                    Arg::new("files")
+                        .help("a list of workfiles to run")
+                        .short('f')
+                        .long("files")
+                        .ignore_case(true)
+                        .value_delimiter(',')
+                ),
         )
         .get_matches();
 
     match main_command.subcommand() {
-        Some(("create", sub_matches)) => {
-            subcommand_create_workflow_file(sub_matches);
-        }
-        Some(("run", sub_matches)) => {
-            subcommand_run_workflow_files(sub_matches);
-        }
+        Some(("create", sub_matches)) => create_workflow_file(sub_matches),
+        Some(("run", sub_matches)) => run_workflow_files(sub_matches),
         _ => unreachable!("Exhausted list of subcommands and subcommand_required prevents `None`"),
     }
 }
