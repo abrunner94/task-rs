@@ -1,7 +1,7 @@
 use std::fs::File;
-use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
+
 use crate::task::{Task, TaskBuilder};
 
 #[derive(Default, Serialize, Debug, Eq, PartialEq)]
@@ -164,6 +164,7 @@ mod tests {
         assert_eq!(workflow, expected_workflow);
     }
 
+    #[test]
     fn it_creates_workflow_using_add_tasks() {
         let expected_workflow = get_expected_workflow();
         let task1: Task = TaskBuilder::new("sample task1".to_string())

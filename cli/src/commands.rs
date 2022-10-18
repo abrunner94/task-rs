@@ -1,10 +1,10 @@
-use std::borrow::Borrow;
 use std::env;
-use std::fmt::format;
 use std::path::PathBuf;
-use clap::{arg, ArgMatches, Command};
 
-use crate::{TaskBuilder, Workflow, WorkflowBuilder};
+use clap::ArgMatches;
+
+use core::task::TaskBuilder;
+use core::workflow::{Workflow, WorkflowBuilder};
 
 pub fn create_workflow_file(args: &ArgMatches) {
     let cwd = env::current_dir()

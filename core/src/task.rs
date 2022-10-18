@@ -1,4 +1,3 @@
-use std::{iter, slice};
 use cmd_lib::run_cmd;
 use serde::{Deserialize, Serialize};
 

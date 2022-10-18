@@ -10,7 +10,6 @@ TODO
 ### Windows
 TODO
 
-
 ## Usage
 Workflows are composed of tasks containing one or more commands and are defined as YAML.
 
