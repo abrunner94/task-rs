@@ -24,22 +24,23 @@ impl Workflow {
                     .filter(|t| t.name.eq(task_name.as_ref().unwrap().as_str()))
                     .collect();
 
-                if !task_to_run.is_empty() {
-                    task_to_run.iter_mut().for_each(|t| t.start());
-                } else {
-                    log::info!("No tasks to run");
+                if task_to_run.is_empty() {
+                    log::info!("No runnable tasks have been found. Skipping operation.");
                 }
+
+                task_to_run.iter_mut().for_each(|t| t.start());
             }
         }
     }
 
-    pub fn to_file(mut self, file_name: &str) -> Workflow {
-        let workflow = Workflow {
-            name: self.name,
-            tasks: self.tasks,
-        };
-
+    pub fn to_file(self, file_name: &str) -> Workflow {
+        let workflow = Workflow { name: self.name, tasks: self.tasks };
         let yaml = serde_yaml::to_value(&workflow).expect("could not convert struct to string");
+
+        if workflow.tasks.is_empty() {
+            log::info!("No tasks have been found. Skipping file operation.");
+            return workflow
+        }
 
         let f = std::fs::OpenOptions::new()
             .write(true)
@@ -52,6 +53,10 @@ impl Workflow {
     }
 
     pub fn from_file(file_name: &str) -> Workflow {
+        // TODO: Maybe we should make it so that when the CLI runs, it will look
+        // at the current working directory of the CLI instead of providing the full path
+        // to the file
+
         let file = File::open(file_name).expect("could not open file");
         let yaml: serde_yaml::Value =
             serde_yaml::from_reader(file).expect("could not read yaml file");
