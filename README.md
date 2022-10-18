@@ -24,11 +24,6 @@ task create -n workfile.yaml
 task run -f workfile.yaml 
 ```
 
-### Run specific tasks in the workflow file
-```bash
-task run -f workfile.yaml -t mytask
-```
-
 ### Run multiple workflow files
 ```bash
 task run -f workfile1.yaml,workfile2.yaml,workfile3.yaml
