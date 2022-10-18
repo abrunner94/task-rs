@@ -2,7 +2,7 @@ use std::{iter, slice};
 use cmd_lib::run_cmd;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct Task {
     pub name: String,
     pub cmds: Vec<String>,
@@ -18,7 +18,7 @@ impl Task {
             let cmd = &command;
             // TODO: Add Windows powershell support
             if run_cmd!(bash -c $cmd).is_err() {
-                println!("errored")
+                log::error!("could not run task");
             }
         }
     }
@@ -50,5 +50,42 @@ impl TaskBuilder {
             name: self.name,
             cmds: self.cmds,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::task::{Task, TaskBuilder};
+
+    #[test]
+    fn it_creates_tasks() {
+        let expected_task = Task {
+            name: "sample task1".to_string(),
+            cmds: vec!["python test.py".to_string(), "node test.js".to_string()]
+        };
+        let commands: Vec<String> = vec!["python test.py".to_string(), "node test.js".to_string()];
+
+        let task1 = TaskBuilder::new("sample task1".to_string())
+            .commands(commands)
+            .build();
+        let task2 = TaskBuilder::new("sample task1".to_string())
+            .add_command("python test.py".to_string())
+            .add_command("node test.js".to_string())
+            .build();
+
+        assert_eq!(task1, task2);
+        assert_eq!(task1, expected_task);
+        assert_eq!(task2, expected_task);
+    }
+
+    #[test]
+    fn it_creates_tasks_with_empty_commands() {
+        let expected_task = Task {
+            name: "sample task1".to_string(),
+            cmds: vec![]
+        };
+        let task = TaskBuilder::new("sample task1".to_string()).build();
+
+        assert_eq!(task, expected_task);
     }
 }

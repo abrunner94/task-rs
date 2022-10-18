@@ -4,7 +4,7 @@ use std::ops::Deref;
 use serde::{Deserialize, Serialize};
 use crate::task::{Task, TaskBuilder};
 
-#[derive(Default, Serialize, Debug)]
+#[derive(Default, Serialize, Debug, Eq, PartialEq)]
 pub struct Workflow {
     name: String,
     tasks: Vec<Task>,
@@ -118,5 +118,65 @@ impl WorkflowBuilder {
             name: self.name,
             tasks: self.tasks,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::task::{Task, TaskBuilder};
+    use crate::workflow::{Workflow, WorkflowBuilder};
+
+    fn get_expected_workflow() -> Workflow {
+        Workflow {
+            name: "my workflow".to_string(),
+            tasks: vec![
+                Task {
+                    name: "sample task1".to_string(),
+                    cmds: vec![
+                        "python test.py".to_string(),
+                        "node test.js".to_string()
+                    ]
+                },
+                Task {
+                    name: "sample task2".to_string(),
+                    cmds: vec!["echo hello world".to_string()]
+                }
+            ]
+        }
+    }
+
+    #[test]
+    fn it_creates_workflow_using_add_task() {
+        let expected_workflow = get_expected_workflow();
+        let task1: Task = TaskBuilder::new("sample task1".to_string())
+            .add_command("python test.py".to_string())
+            .add_command("node test.js".to_string())
+            .build();
+        let task2: Task = TaskBuilder::new("sample task2".to_string())
+            .add_command("echo hello world".to_string())
+            .build();
+
+        let workflow = WorkflowBuilder::new("my workflow".to_string())
+            .add_task(task1)
+            .add_task(task2)
+            .build();
+
+        assert_eq!(workflow, expected_workflow);
+    }
+
+    fn it_creates_workflow_using_add_tasks() {
+        let expected_workflow = get_expected_workflow();
+        let task1: Task = TaskBuilder::new("sample task1".to_string())
+            .add_command("python test.py".to_string())
+            .add_command("node test.js".to_string())
+            .build();
+        let task2: Task = TaskBuilder::new("sample task2".to_string())
+            .add_command("echo hello world".to_string())
+            .build();
+        let workflow = WorkflowBuilder::new("my workflow".to_string())
+            .add_tasks(vec![task1, task2])
+            .build();
+
+        assert_eq!(workflow, expected_workflow);
     }
 }
