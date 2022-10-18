@@ -36,4 +36,3 @@ pub fn run_workflow_files(args: &ArgMatches) {
             Workflow::from_file(f).start(None)
         });
 }
-
