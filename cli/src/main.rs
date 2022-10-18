@@ -1,12 +1,13 @@
-mod examples;
-mod commands;
-
-use clap::{command, arg, Command};
+use clap::{arg, command, Command};
 use simple_logger::SimpleLogger;
 
-use core::task::{Task, TaskBuilder};
+use core::task::TaskBuilder;
 use core::workflow::{Workflow, WorkflowBuilder};
-use crate::commands::{create_workflow_file, run_workflow_files};
+
+use crate::commands::{subcommand_create_workflow_file, subcommand_run_workflow_files};
+
+mod examples;
+mod commands;
 
 fn main() {
     SimpleLogger::new().init().unwrap();
@@ -14,12 +15,26 @@ fn main() {
     let main_command = command!()
         .propagate_version(true)
         .subcommand_required(true)
-        .arg_required_else_help(true);
+        .arg_required_else_help(true)
+        .subcommand(
+            Command::new("create")
+                .about("Creates a new workfile")
+                .arg(arg!(-n --name <NAME> "a required name for your workfile")),
+        )
+        .subcommand(
+            Command::new("run")
+                .about("Runs a workfile")
+                .arg(arg!(-f --file <FILE> "a required workfile to run")),
+        )
+        .get_matches();
 
-    // Create a workflow file
-    create_workflow_file(&main_command);
-
-    // Run the workflow
-    run_workflow_files(&main_command);
-
+    match main_command.subcommand() {
+        Some(("create", sub_matches)) => {
+            subcommand_create_workflow_file(sub_matches);
+        }
+        Some(("run", sub_matches)) => {
+            subcommand_run_workflow_files(sub_matches);
+        }
+        _ => unreachable!("Exhausted list of subcommands and subcommand_required prevents `None`"),
+    }
 }
