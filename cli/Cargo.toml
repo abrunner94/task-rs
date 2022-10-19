@@ -1,5 +1,5 @@
 [package]
-name = "task"
+name = "cli"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,3 +11,7 @@ anyhow = "1.0.65"
 log = "0.4.17"
 simple_logger = "2.3.0"
 core = { path = "../core" }
+
+[[bin]]
+name = "task"
+path = "src/main.rs"

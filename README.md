@@ -15,7 +15,7 @@ Workflows are composed of tasks containing one or more commands and are defined 
 
 ### Create a workflow
 ```bash
-task create -n workfile.yaml
+task create -n my_workflow
 ```
 
 ### Run the whole workflow
