@@ -3,7 +3,6 @@ use simple_logger::SimpleLogger;
 
 use crate::commands::{create_workflow_file, run_workflow_files};
 
-mod examples;
 mod commands;
 
 fn main() {

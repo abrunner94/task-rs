@@ -1,4 +1,5 @@
-use std::fs::File;
+use std::fs::{File, OpenOptions};
+use std::io::Error;
 
 use serde::{Deserialize, Serialize};
 
@@ -33,33 +34,39 @@ impl Workflow {
         }
     }
 
-    pub fn to_file(self, file_name: &str) -> Workflow {
+    pub fn to_file(self, file_name: &str) -> Result<Workflow, Error> {
         let workflow = Workflow { name: self.name, tasks: self.tasks };
         let yaml = serde_yaml::to_value(&workflow).expect("could not convert struct to string");
 
         if workflow.tasks.is_empty() {
-            log::info!("No tasks have been found. Skipping file operation.");
-            return workflow
+            log::info!("No tasks have been found. Skipping file creation.");
+            return Ok(workflow)
         }
 
-        let f = std::fs::OpenOptions::new()
-            .write(true)
-            .create(true)
-            .open(file_name)
-            .expect("could not open file");
-        serde_yaml::to_writer(f, &yaml).expect("could not write yaml file");
+        let file = match OpenOptions::new().write(true).create(true).open(file_name) {
+            Ok(file) => file,
+            Err(e) => {
+                let msg = format!("{} file cannot be written to", &file_name);
+                return Err(Error::new(e.kind(), msg))
+            }
+        };
 
-        workflow
+        serde_yaml::to_writer(file, &yaml).expect("could not write yaml file");
+
+        Ok(workflow)
     }
 
-    pub fn from_file(file_name: &str) -> Workflow {
-        // TODO: Maybe we should make it so that when the CLI runs, it will look
-        // at the current working directory of the CLI instead of providing the full path
-        // to the file
+    pub fn from_file(file_name: &str) -> Result<Workflow, Error> {
+        let file = match File::open(file_name) {
+            Ok(file) => file,
+            Err(e) => {
+                let msg = format!("{} file does not exist", &file_name);
+                return Err(Error::new(e.kind(), msg))
+            }
+        };
 
-        let file = File::open(file_name).expect("could not open file");
-        let yaml: serde_yaml::Value =
-            serde_yaml::from_reader(file).expect("could not read yaml file");
+        let yaml: serde_yaml::Value = serde_yaml::from_reader(file)
+            .expect("could not read yaml");
 
         let tasks = &yaml["tasks"];
         let workflow_name = &yaml["name"];
@@ -83,9 +90,11 @@ impl Workflow {
             )
         }
 
-        WorkflowBuilder::new(String::from(workflow_name.as_str().unwrap()))
+        let workflow = WorkflowBuilder::new(String::from(workflow_name.as_str().unwrap()))
             .add_tasks(workflow_tasks)
-            .build()
+            .build();
+
+        Ok(workflow)
     }
 }
 
