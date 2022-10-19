@@ -36,7 +36,8 @@ impl Workflow {
 
     pub fn to_file(self, file_name: &str) -> Result<Workflow, Error> {
         let workflow = Workflow { name: self.name, tasks: self.tasks };
-        let yaml = serde_yaml::to_value(&workflow).expect("could not convert struct to string");
+        let yaml = serde_yaml::to_value(&workflow)
+            .expect("could not convert struct to string");
 
         if workflow.tasks.is_empty() {
             log::info!("No tasks have been found. Skipping file creation.");
@@ -66,8 +67,7 @@ impl Workflow {
         };
 
         let yaml: serde_yaml::Value = serde_yaml::from_reader(file)
-            .expect("could not read yaml");
-
+            .expect("could not read yaml file");
         let tasks = &yaml["tasks"];
         let workflow_name = &yaml["name"];
         let mut workflow_tasks: Vec<Task> = Vec::new();
@@ -90,7 +90,7 @@ impl Workflow {
             )
         }
 
-        let workflow = WorkflowBuilder::new(String::from(workflow_name.as_str().unwrap()))
+        let workflow = WorkflowBuilder::new(workflow_name.as_str().unwrap().to_string())
             .add_tasks(workflow_tasks)
             .build();
 

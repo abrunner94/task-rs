@@ -39,6 +39,6 @@ fn main() {
     match main_command.subcommand() {
         Some(("create", sub_matches)) => create_workflow_file(sub_matches),
         Some(("run", sub_matches)) => run_workflow_files(sub_matches),
-        _ => unreachable!("Exhausted list of subcommands and subcommand_required prevents `None`"),
+        _ => unreachable!("Exhausted list of subcommands"),
     }
 }
