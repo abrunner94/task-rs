@@ -1,5 +1,4 @@
 /target
-/Cargo.lock
 *.py
 *.js
 sample_*.yaml
