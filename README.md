@@ -1,6 +1,7 @@
-# task-rs
-Create and run your scripts as workflows using one CLI.
-
+<div align="center">
+<h1>task-rs</h1>
+<h3>Create and run your scripts as workflows using one CLI</h3>
+</div>
 <p align="center">
   <img src="https://github.com/abrunner94/rust-task/blob/main/assets/task-rs.png?raw=true" width="450" title="task-rs logo">
 </p>
