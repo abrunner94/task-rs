@@ -1,5 +1,6 @@
 # task-rs
-Create and run your scripts as workflows using one CLI
+task-rs is a simple file-based task runner that executes scripts defined in a YAML file.
+That way, you can create and run your scripts as workflows using one CLI.
 
 <p align="left">
   <img src="https://github.com/abrunner94/rust-task/blob/main/assets/task-rs.png?raw=true" height="350" title="task-rs logo">
@@ -15,7 +16,7 @@ TODO
 TODO
 
 ## Usage
-Workflows are composed of tasks containing one or more commands and are defined as YAML.
+Workflows are composed of tasks containing one or more commands and are defined in YAML files.
 
 ### Create a workflow
 ```bash
