@@ -1,5 +1,7 @@
-# ⚙️ task.rs 🦀
+# task-rs
 Create and run your scripts as workflows using one CLI.
+
+![alt task-rs logo](https://github.com/abrunner94/rust-task/blob/main/assets/task-rs.png?raw=true)
 
 ## Installation
 Follow the instructions for your operating system.
