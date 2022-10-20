@@ -1,51 +1,35 @@
 name: Publish
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
-      - '*'
+      - v[0-9]+.*
 
 jobs:
-  publish:
-    name: Publish for ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: taiki-e/create-gh-release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  upload-assets:
     strategy:
       matrix:
-        name: [
-          windows,
-          macos,
-          linux
-        ]
-
-        include:
-          - name: linux
-            os: ubuntu-latest
-            artifact_name: task
-            asset_name: task-linux-amd64
-          - name: windows
-            os: windows-latest
-            artifact_name: task.exe
-            asset_name: task-windows-amd64
-          - name: macos
-            os: macos-latest
-            artifact_name: task
-            asset_name: task-macos-amd64
-
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v1
-
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: taiki-e/upload-rust-binary-action@v1
         with:
-          profile: minimal
-          toolchain: stable
-
-      - name: Build
-        run: cargo build --release
-
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v1-release
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/${{ matrix.artifact_name }}
-          asset_name: ${{ matrix.asset_name }}
-          tag: ${{ github.ref }}
+          bin: task
+          tar: unix
+          zip: windows
+          token: ${{ secrets.GITHUB_TOKEN }}
