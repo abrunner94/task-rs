@@ -1,9 +1,9 @@
 # task-rs
 Create and run your scripts as workflows using one CLI.
 
-<div style="display: flex; margin: 0 auto;">
-  <img src="https://github.com/abrunner94/rust-task/blob/main/assets/task-rs.png?raw=truee" width="350" title="task-rs logo">
-</div>
+<p align="center">
+  <img src="https://github.com/abrunner94/rust-task/blob/main/assets/task-rs.png?raw=true" width="450" title="task-rs logo">
+</p>
 
 ## Installation
 Follow the instructions for your operating system.
