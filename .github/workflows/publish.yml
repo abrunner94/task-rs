@@ -32,4 +32,5 @@ jobs:
           bin: task
           tar: unix
           zip: windows
+          include: LICENSE,README.md
           token: ${{ secrets.GITHUB_TOKEN }}
