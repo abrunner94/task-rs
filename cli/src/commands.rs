@@ -19,9 +19,10 @@ pub fn create_workflow_file(args: &ArgMatches) {
     let path = format!("{}/{}.yaml", &cwd, &name);
 
     let workflow = WorkflowBuilder::new(name)
-        .add_task(TaskBuilder::new("example_task".to_string())
-            .commands(vec!["echo hello".to_string(), "echo world".to_string()])
-            .build()
+        .add_task(
+            TaskBuilder::new("example_task".to_string())
+                .commands(vec!["echo hello".to_string(), "echo world".to_string()])
+                .build(),
         )
         .build();
 
@@ -29,7 +30,7 @@ pub fn create_workflow_file(args: &ArgMatches) {
         Ok(workflow) => {
             workflow.start(None);
             log::info!("Created workflow file");
-        },
+        }
         Err(err) => {
             let msg = "Could not create workflow".to_string();
             log::error!("{}: {}", &msg, &err);
