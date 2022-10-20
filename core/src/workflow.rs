@@ -18,9 +18,12 @@ impl Workflow {
 
     pub fn start(mut self, task_name: Option<String>) {
         match task_name {
-            None => { self.tasks.iter_mut().for_each(|t| t.start()); }
+            None => {
+                self.tasks.iter_mut().for_each(|t| t.start());
+            }
             Some(_) => {
-                let mut task_to_run: Vec<Task> = self.tasks
+                let mut task_to_run: Vec<Task> = self
+                    .tasks
                     .into_iter()
                     .filter(|t| t.name.eq(task_name.as_ref().unwrap().as_str()))
                     .collect();
@@ -35,20 +38,22 @@ impl Workflow {
     }
 
     pub fn to_file(self, file_name: &str) -> Result<Workflow, Error> {
-        let workflow = Workflow { name: self.name, tasks: self.tasks };
-        let yaml = serde_yaml::to_value(&workflow)
-            .expect("could not convert struct to string");
+        let workflow = Workflow {
+            name: self.name,
+            tasks: self.tasks,
+        };
+        let yaml = serde_yaml::to_value(&workflow).expect("could not convert struct to string");
 
         if workflow.tasks.is_empty() {
             log::info!("No tasks have been found. Skipping file creation.");
-            return Ok(workflow)
+            return Ok(workflow);
         }
 
         let file = match OpenOptions::new().write(true).create(true).open(file_name) {
             Ok(file) => file,
             Err(e) => {
                 let msg = format!("{} file cannot be written to", &file_name);
-                return Err(Error::new(e.kind(), msg))
+                return Err(Error::new(e.kind(), msg));
             }
         };
 
@@ -62,12 +67,12 @@ impl Workflow {
             Ok(file) => file,
             Err(e) => {
                 let msg = format!("{} file does not exist", &file_name);
-                return Err(Error::new(e.kind(), msg))
+                return Err(Error::new(e.kind(), msg));
             }
         };
 
-        let yaml: serde_yaml::Value = serde_yaml::from_reader(file)
-            .expect("could not read yaml file");
+        let yaml: serde_yaml::Value =
+            serde_yaml::from_reader(file).expect("could not read yaml file");
         let tasks = &yaml["tasks"];
         let workflow_name = &yaml["name"];
         let mut workflow_tasks: Vec<Task> = Vec::new();
@@ -141,16 +146,13 @@ mod tests {
             tasks: vec![
                 Task {
                     name: "sample task1".to_string(),
-                    cmds: vec![
-                        "python test.py".to_string(),
-                        "node test.js".to_string()
-                    ]
+                    cmds: vec!["python test.py".to_string(), "node test.js".to_string()],
                 },
                 Task {
                     name: "sample task2".to_string(),
-                    cmds: vec!["echo hello world".to_string()]
-                }
-            ]
+                    cmds: vec!["echo hello world".to_string()],
+                },
+            ],
         }
     }
 

@@ -12,23 +12,28 @@ jobs:
     strategy:
       matrix:
         name: [
-          linux,
           windows,
-          macos
+          macos,
+          linux
         ]
 
         include:
           - name: linux
             os: ubuntu-latest
-            artifact_name: target/release/task
-            asset_name: task-linux
+            artifact_name: task
+            asset_name: task-linux-amd64
+          - name: windows
+            os: windows-latest
+            artifact_name: task.exe
+            asset_name: task-windows-amd64
           - name: macos
             os: macos-latest
-            artifact_name: target/release/task
-            asset_name: task-macos
+            artifact_name: task
+            asset_name: task-macos-amd64
 
     steps:
       - uses: actions/checkout@v1
+
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -38,7 +43,9 @@ jobs:
         run: cargo build --release --locked
 
       - name: Upload binaries to release
-        uses: actions/upload-artifact@v2
+        uses: svenstaro/upload-release-action@v1-release
         with:
-          name: ${{ matrix.asset_name }}
-          path: ${{ matrix.artifact_name }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}

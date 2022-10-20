@@ -60,7 +60,7 @@ mod tests {
     fn it_creates_tasks() {
         let expected_task = Task {
             name: "sample task1".to_string(),
-            cmds: vec!["python test.py".to_string(), "node test.js".to_string()]
+            cmds: vec!["python test.py".to_string(), "node test.js".to_string()],
         };
         let commands: Vec<String> = vec!["python test.py".to_string(), "node test.js".to_string()];
 
@@ -81,7 +81,7 @@ mod tests {
     fn it_creates_tasks_with_empty_commands() {
         let expected_task = Task {
             name: "sample task1".to_string(),
-            cmds: vec![]
+            cmds: vec![],
         };
         let task = TaskBuilder::new("sample task1".to_string()).build();
 

@@ -1,4 +1,4 @@
-use clap::{Arg, command, Command};
+use clap::{command, Arg, Command};
 use simple_logger::SimpleLogger;
 
 use crate::commands::{create_workflow_file, run_workflow_files};
@@ -13,26 +13,23 @@ fn main() {
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(
-            Command::new("create")
-                .about("Creates a new workfile")
-                .arg(Arg::new("name")
+            Command::new("create").about("Creates a new workfile").arg(
+                Arg::new("name")
                     .help("a required name for your new workfile")
                     .short('n')
                     .long("name")
-                    .ignore_case(true)
-                )
+                    .ignore_case(true),
+            ),
         )
         .subcommand(
-            Command::new("run")
-                .about("Runs a workfile")
-                .arg(
-                    Arg::new("files")
-                        .help("a list of workfiles to run")
-                        .short('f')
-                        .long("files")
-                        .ignore_case(true)
-                        .value_delimiter(',')
-                ),
+            Command::new("run").about("Runs a workfile").arg(
+                Arg::new("files")
+                    .help("a list of workfiles to run")
+                    .short('f')
+                    .long("files")
+                    .ignore_case(true)
+                    .value_delimiter(','),
+            ),
         )
         .get_matches();
 
