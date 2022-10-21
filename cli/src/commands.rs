@@ -24,12 +24,13 @@ pub fn create_workflow_file(args: &ArgMatches) {
                 .commands(vec!["echo hello".to_string(), "echo world".to_string()])
                 .build(),
         )
+        .add_defaults(vec!["example_task".to_string()])
         .build();
 
     match workflow.to_file(path.as_str()) {
         Ok(workflow) => {
-            workflow.start(None);
             log::info!("Created workflow file");
+            workflow.start(None);
         }
         Err(err) => {
             let msg = "Could not create workflow".to_string();

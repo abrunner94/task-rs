@@ -1,3 +1,4 @@
+use std::borrow::{Borrow, BorrowMut};
 use std::fs::{File, OpenOptions};
 use std::io::Error;
 
@@ -8,6 +9,7 @@ use crate::task::{Task, TaskBuilder};
 #[derive(Default, Serialize, Debug, Eq, PartialEq)]
 pub struct Workflow {
     name: String,
+    default: Vec<String>,
     tasks: Vec<Task>,
 }
 
@@ -40,6 +42,7 @@ impl Workflow {
     pub fn to_file(self, file_name: &str) -> Result<Workflow, Error> {
         let workflow = Workflow {
             name: self.name,
+            default: self.default,
             tasks: self.tasks,
         };
         let yaml = serde_yaml::to_value(&workflow).expect("could not convert struct to string");
@@ -71,28 +74,40 @@ impl Workflow {
             }
         };
 
-        let yaml: serde_yaml::Value =
-            serde_yaml::from_reader(file).expect("could not read yaml file");
+        let yaml: serde_yaml::Value = serde_yaml::from_reader(file)
+            .expect("could not read yaml file");
+
+        let default = &yaml["default"];
         let tasks = &yaml["tasks"];
         let workflow_name = &yaml["name"];
+
         let mut workflow_tasks: Vec<Task> = Vec::new();
 
-        for task in tasks.as_sequence().unwrap().iter() {
-            let commands = task["cmds"].as_sequence().unwrap();
+        // Build up default task list
+        for def in default.as_sequence().unwrap().iter() {
+            let default_task_name = def.as_str().unwrap().to_string();
 
-            let commands_as_str: Vec<String> = commands
-                .iter()
-                .map(|c| {
-                    let value = c.as_str();
-                    String::from(value.unwrap())
-                })
-                .collect();
+            for task in tasks.as_sequence().unwrap().iter() {
+                let task_name = &task.as_mapping().unwrap()["name"].as_str().unwrap().to_string();
+                // Check if the default task name matches a task name in the task list
+                if task_name.eq(&default_task_name) {
+                    let commands = task["cmds"].as_sequence().unwrap();
 
-            workflow_tasks.push(
-                TaskBuilder::new(String::from(task["name"].as_str().unwrap()))
-                    .commands(commands_as_str)
-                    .build(),
-            )
+                    let commands_as_str: Vec<String> = commands
+                        .iter()
+                        .map(|c| {
+                            let value = c.as_str();
+                            String::from(value.unwrap())
+                        })
+                        .collect();
+
+                    workflow_tasks.push(
+                        TaskBuilder::new(String::from(task["name"].as_str().unwrap()))
+                            .commands(commands_as_str)
+                            .build(),
+                    )
+                }
+            }
         }
 
         let workflow = WorkflowBuilder::new(workflow_name.as_str().unwrap().to_string())
@@ -106,6 +121,7 @@ impl Workflow {
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct WorkflowBuilder {
     name: String,
+    default: Vec<String>,
     tasks: Vec<Task>,
 }
 
@@ -113,6 +129,7 @@ impl WorkflowBuilder {
     pub fn new(name: String) -> WorkflowBuilder {
         WorkflowBuilder {
             name,
+            default: vec![],
             tasks: vec![],
         }
     }
@@ -127,9 +144,15 @@ impl WorkflowBuilder {
         self
     }
 
+    pub fn add_defaults(mut self, task_names: Vec<String>) -> WorkflowBuilder {
+        self.default = task_names;
+        self
+    }
+
     pub fn build(self) -> Workflow {
         Workflow {
             name: self.name,
+            default: self.default,
             tasks: self.tasks,
         }
     }
@@ -143,6 +166,10 @@ mod tests {
     fn get_expected_workflow() -> Workflow {
         Workflow {
             name: "my workflow".to_string(),
+            default: vec![
+                "sample task1".to_string(),
+                "sample task2".to_string(),
+            ],
             tasks: vec![
                 Task {
                     name: "sample task1".to_string(),
@@ -168,6 +195,7 @@ mod tests {
             .build();
 
         let workflow = WorkflowBuilder::new("my workflow".to_string())
+            .add_defaults(vec![task1.name.clone(), task2.name.clone()])
             .add_task(task1)
             .add_task(task2)
             .build();
@@ -186,6 +214,7 @@ mod tests {
             .add_command("echo hello world".to_string())
             .build();
         let workflow = WorkflowBuilder::new("my workflow".to_string())
+            .add_defaults(vec![task1.name.clone(), task2.name.clone()])
             .add_tasks(vec![task1, task2])
             .build();
 
