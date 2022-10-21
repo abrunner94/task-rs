@@ -8,7 +8,10 @@ Create and run your scripts as workflows using one CLI.
 
 ## Installation
 ### macOS
-Download the Apple Darwin archive from the [releases section](https://github.com/abrunner94/task-rs/releases)
+```bash
+brew tap abrunner94/taskrs
+brew install taskrs
+```
 ### Linux
 Download the Linux archive from the [releases section](https://github.com/abrunner94/task-rs/releases)
 ### Windows
