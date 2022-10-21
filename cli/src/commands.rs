@@ -13,8 +13,6 @@ pub fn create_workflow_file(args: &ArgMatches) {
         .unwrap()
         .to_string();
 
-    // TODO: Check if a Workfile.yaml exists in cwd
-    // If so, create a Workfile2.yaml file, and so on
     let name = args.get_one::<String>("name").unwrap().to_string();
     let path = format!("{}/{}.yaml", &cwd, &name);
 
