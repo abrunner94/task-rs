@@ -1,5 +1,4 @@
 use std::env;
-use std::path::PathBuf;
 
 use clap::ArgMatches;
 
@@ -7,15 +6,24 @@ use core::task::TaskBuilder;
 use core::workflow::{Workflow, WorkflowBuilder};
 
 pub fn create_workflow_file(args: &ArgMatches) {
-    let cwd = env::current_dir()
-        .unwrap_or_else(|_| PathBuf::from("could not get cwd"))
-        .to_str()
-        .unwrap()
-        .to_string();
+    let cwd = match env::current_dir() {
+        Ok(cwd) => cwd.to_str().unwrap().to_string(),
+        Err(e) => {
+            let msg = "Could not get current working directory".to_string();
+            log::error!("{}: {}", &msg, &e);
+            return;
+        }
+    };
 
-    let name = args.get_one::<String>("name").unwrap().to_string();
+    let name = match args.get_one::<String>("name") {
+        None => {
+            log::warn!("No argument for name has been found");
+            return;
+        }
+        Some(name) => name.to_string(),
+    };
+
     let path = format!("{}/{}.yaml", &cwd, &name);
-
     let workflow = WorkflowBuilder::new(name)
         .add_task(
             TaskBuilder::new("example_task".to_string())
@@ -38,20 +46,23 @@ pub fn create_workflow_file(args: &ArgMatches) {
 }
 
 pub fn run_workflow_files(args: &ArgMatches) {
-    args.get_many::<String>("files")
-        .unwrap_or_default()
-        .map(|v| v.as_str())
-        .collect::<Vec<_>>()
-        .into_iter()
-        .for_each(|f| {
-            log::info!("Running workfile {}", f);
-            let workflow = Workflow::from_file(f);
-            match workflow {
-                Ok(workflow) => workflow.start(None),
-                Err(err) => {
-                    let msg = "Could not start workflow".to_string();
-                    log::error!("{}: {}", &msg, &err);
-                }
-            }
-        });
+    match args.get_many::<String>("files") {
+        None => log::warn!("No arguments have been passed in for files"),
+        Some(args) => {
+            args.map(|v| v.as_str())
+                .collect::<Vec<_>>()
+                .into_iter()
+                .for_each(|f| {
+                    log::info!("Running workfile {}", f);
+                    let workflow = Workflow::from_file(f);
+                    match workflow {
+                        Ok(workflow) => workflow.start(None),
+                        Err(err) => {
+                            let msg = "Could not start workflow".to_string();
+                            log::error!("{}: {}", &msg, &err);
+                        }
+                    }
+                });
+        }
+    }
 }

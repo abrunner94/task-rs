@@ -49,7 +49,7 @@ impl Workflow {
         let yaml = match serde_yaml::to_value(&workflow) {
             Ok(yaml) => yaml,
             Err(_) => {
-                let msg = format!("could not convert yaml file: {}", &file_name);
+                let msg = format!("Could not convert yaml file: {}", &file_name);
                 return Err(Error::new(ErrorKind::InvalidInput, msg));
             }
         };
@@ -90,7 +90,7 @@ impl Workflow {
         let yaml: Value = match serde_yaml::from_reader(file) {
             Ok(read) => read,
             Err(_) => {
-                return Err(Error::new(ErrorKind::Other, "could not read yaml file"));
+                return Err(Error::new(ErrorKind::Other, "Could not read yaml file"));
             }
         };
 
@@ -102,7 +102,7 @@ impl Workflow {
         // Build up default task list
         let default_tasks: Vec<Value> = match default.as_sequence() {
             None => {
-                log::warn!("no default tasks have been found");
+                log::warn!("No default tasks have been found");
                 vec![].to_vec()
             }
             Some(defaults) => defaults.to_vec(),
@@ -110,16 +110,16 @@ impl Workflow {
 
         let task_list: Vec<Value> = match tasks.as_sequence() {
             None => {
-                log::warn!("no tasks have been found");
+                log::warn!("No tasks have been found");
                 vec![].to_vec()
             }
             Some(tasks) => tasks.to_vec(),
         };
 
         if task_list.is_empty() || default_tasks.is_empty() {
-            log::warn!("neither tasks or default tasks have been found");
+            log::warn!("The default task list and main task list have to be defined");
             return Ok(Workflow {
-                name: workflow_name.as_str().unwrap().to_string(),
+                name: "invalid".to_string(),
                 tasks: vec![],
                 default: vec![],
             });
