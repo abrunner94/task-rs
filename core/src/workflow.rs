@@ -1,8 +1,8 @@
-use std::borrow::{Borrow, BorrowMut};
 use std::fs::{File, OpenOptions};
-use std::io::Error;
+use std::io::{Error, ErrorKind};
 
 use serde::{Deserialize, Serialize};
+use serde_yaml::Value;
 
 use crate::task::{Task, TaskBuilder};
 
@@ -45,7 +45,14 @@ impl Workflow {
             default: self.default,
             tasks: self.tasks,
         };
-        let yaml = serde_yaml::to_value(&workflow).expect("could not convert struct to string");
+
+        let yaml = match serde_yaml::to_value(&workflow) {
+            Ok(yaml) => yaml,
+            Err(_) => {
+                let msg = format!("could not convert yaml file: {}", &file_name);
+                return Err(Error::new(ErrorKind::InvalidInput, msg));
+            }
+        };
 
         if workflow.tasks.is_empty() {
             log::info!("No tasks have been found. Skipping file creation.");
@@ -60,7 +67,13 @@ impl Workflow {
             }
         };
 
-        serde_yaml::to_writer(file, &yaml).expect("could not write yaml file");
+        match serde_yaml::to_writer(file, &yaml) {
+            Ok(written) => written,
+            Err(_) => {
+                let msg = format!("{} could not write yaml to file", &file_name);
+                return Err(Error::new(ErrorKind::Other, msg));
+            }
+        }
 
         Ok(workflow)
     }
@@ -74,8 +87,12 @@ impl Workflow {
             }
         };
 
-        let yaml: serde_yaml::Value = serde_yaml::from_reader(file)
-            .expect("could not read yaml file");
+        let yaml: Value = match serde_yaml::from_reader(file) {
+            Ok(read) => read,
+            Err(_) => {
+                return Err(Error::new(ErrorKind::Other, "could not read yaml file"));
+            }
+        };
 
         let default = &yaml["default"];
         let tasks = &yaml["tasks"];
@@ -83,11 +100,40 @@ impl Workflow {
         let mut workflow_tasks: Vec<Task> = Vec::new();
 
         // Build up default task list
-        for def in default.as_sequence().unwrap().iter() {
+        let default_tasks: Vec<Value> = match default.as_sequence() {
+            None => {
+                log::warn!("no default tasks have been found");
+                vec![].to_vec()
+            }
+            Some(defaults) => defaults.to_vec(),
+        };
+
+        let task_list: Vec<Value> = match tasks.as_sequence() {
+            None => {
+                log::warn!("no tasks have been found");
+                vec![].to_vec()
+            }
+            Some(tasks) => tasks.to_vec(),
+        };
+
+        if task_list.is_empty() || default_tasks.is_empty() {
+            log::warn!("neither tasks or default tasks have been found");
+            return Ok(Workflow {
+                name: workflow_name.as_str().unwrap().to_string(),
+                tasks: vec![],
+                default: vec![],
+            });
+        }
+
+        for def in default_tasks.iter() {
             let default_task_name = def.as_str().unwrap().to_string();
 
-            for task in tasks.as_sequence().unwrap().iter() {
-                let task_name = &task.as_mapping().unwrap()["name"].as_str().unwrap().to_string();
+            for task in task_list.iter() {
+                let task_name = &task.as_mapping().unwrap()["name"]
+                    .as_str()
+                    .unwrap()
+                    .to_string();
+
                 // Check if the default task name matches a task name in the task list
                 if task_name.eq(&default_task_name) {
                     let commands = task["cmds"].as_sequence().unwrap();
@@ -164,10 +210,7 @@ mod tests {
     fn get_expected_workflow() -> Workflow {
         Workflow {
             name: "my workflow".to_string(),
-            default: vec![
-                "sample task1".to_string(),
-                "sample task2".to_string(),
-            ],
+            default: vec!["sample task1".to_string(), "sample task2".to_string()],
             tasks: vec![
                 Task {
                     name: "sample task1".to_string(),
