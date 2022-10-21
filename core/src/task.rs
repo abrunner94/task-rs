@@ -15,9 +15,15 @@ impl Task {
     pub fn start(&mut self) {
         for command in self.cmds.iter() {
             let cmd = &command;
-            // TODO: Add Windows powershell support
-            if run_cmd!(bash -c $cmd).is_err() {
-                log::error!("could not run task");
+
+            if cfg!(target_os = "windows") {
+                if run_cmd!(cmd /C $cmd).is_err() {
+                    log::error!("could not run task");
+                }
+            } else {
+                if run_cmd!(bash -c $cmd).is_err() {
+                    log::error!("could not run task");
+                }
             }
         }
     }

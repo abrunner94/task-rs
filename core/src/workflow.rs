@@ -80,7 +80,6 @@ impl Workflow {
         let default = &yaml["default"];
         let tasks = &yaml["tasks"];
         let workflow_name = &yaml["name"];
-
         let mut workflow_tasks: Vec<Task> = Vec::new();
 
         // Build up default task list
@@ -92,7 +91,6 @@ impl Workflow {
                 // Check if the default task name matches a task name in the task list
                 if task_name.eq(&default_task_name) {
                     let commands = task["cmds"].as_sequence().unwrap();
-
                     let commands_as_str: Vec<String> = commands
                         .iter()
                         .map(|c| {
