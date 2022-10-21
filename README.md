@@ -1,4 +1,8 @@
 # task-rs
+![CI](https://github.com/abrunner94/task-rs/actions/workflows/ci.yml/badge.svg)
+![Publish](https://github.com/abrunner94/task-rs/actions/workflows/publish.yml/badge.svg)
+
+
 task-rs is a simple file-based task runner that executes scripts defined in a YAML file.
 Create and run your scripts as workflows using one CLI.
 
