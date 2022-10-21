@@ -1,13 +1,15 @@
 use std::fs::{File, OpenOptions};
-use std::io::Error;
+use std::io::{Error, ErrorKind};
 
 use serde::{Deserialize, Serialize};
+use serde_yaml::Value;
 
 use crate::task::{Task, TaskBuilder};
 
 #[derive(Default, Serialize, Debug, Eq, PartialEq)]
 pub struct Workflow {
     name: String,
+    default: Vec<String>,
     tasks: Vec<Task>,
 }
 
@@ -40,9 +42,17 @@ impl Workflow {
     pub fn to_file(self, file_name: &str) -> Result<Workflow, Error> {
         let workflow = Workflow {
             name: self.name,
+            default: self.default,
             tasks: self.tasks,
         };
-        let yaml = serde_yaml::to_value(&workflow).expect("could not convert struct to string");
+
+        let yaml = match serde_yaml::to_value(&workflow) {
+            Ok(yaml) => yaml,
+            Err(_) => {
+                let msg = format!("Could not convert yaml file: {}", &file_name);
+                return Err(Error::new(ErrorKind::InvalidInput, msg));
+            }
+        };
 
         if workflow.tasks.is_empty() {
             log::info!("No tasks have been found. Skipping file creation.");
@@ -57,7 +67,13 @@ impl Workflow {
             }
         };
 
-        serde_yaml::to_writer(file, &yaml).expect("could not write yaml file");
+        match serde_yaml::to_writer(file, &yaml) {
+            Ok(written) => written,
+            Err(_) => {
+                let msg = format!("{} could not write yaml to file", &file_name);
+                return Err(Error::new(ErrorKind::Other, msg));
+            }
+        }
 
         Ok(workflow)
     }
@@ -71,28 +87,71 @@ impl Workflow {
             }
         };
 
-        let yaml: serde_yaml::Value =
-            serde_yaml::from_reader(file).expect("could not read yaml file");
+        let yaml: Value = match serde_yaml::from_reader(file) {
+            Ok(read) => read,
+            Err(_) => {
+                return Err(Error::new(ErrorKind::Other, "Could not read yaml file"));
+            }
+        };
+
+        let default = &yaml["default"];
         let tasks = &yaml["tasks"];
         let workflow_name = &yaml["name"];
         let mut workflow_tasks: Vec<Task> = Vec::new();
 
-        for task in tasks.as_sequence().unwrap().iter() {
-            let commands = task["cmds"].as_sequence().unwrap();
+        // Build up default task list
+        let default_tasks: Vec<Value> = match default.as_sequence() {
+            None => {
+                log::warn!("No default tasks have been found");
+                vec![].to_vec()
+            }
+            Some(defaults) => defaults.to_vec(),
+        };
 
-            let commands_as_str: Vec<String> = commands
-                .iter()
-                .map(|c| {
-                    let value = c.as_str();
-                    String::from(value.unwrap())
-                })
-                .collect();
+        let task_list: Vec<Value> = match tasks.as_sequence() {
+            None => {
+                log::warn!("No tasks have been found");
+                vec![].to_vec()
+            }
+            Some(tasks) => tasks.to_vec(),
+        };
 
-            workflow_tasks.push(
-                TaskBuilder::new(String::from(task["name"].as_str().unwrap()))
-                    .commands(commands_as_str)
-                    .build(),
-            )
+        if task_list.is_empty() || default_tasks.is_empty() {
+            log::warn!("The default task list and main task list have to be defined");
+            return Ok(Workflow {
+                name: "invalid".to_string(),
+                tasks: vec![],
+                default: vec![],
+            });
+        }
+
+        for def in default_tasks.iter() {
+            let default_task_name = def.as_str().unwrap().to_string();
+
+            for task in task_list.iter() {
+                let task_name = &task.as_mapping().unwrap()["name"]
+                    .as_str()
+                    .unwrap()
+                    .to_string();
+
+                // Check if the default task name matches a task name in the task list
+                if task_name.eq(&default_task_name) {
+                    let commands = task["cmds"].as_sequence().unwrap();
+                    let commands_as_str: Vec<String> = commands
+                        .iter()
+                        .map(|c| {
+                            let value = c.as_str();
+                            String::from(value.unwrap())
+                        })
+                        .collect();
+
+                    workflow_tasks.push(
+                        TaskBuilder::new(String::from(task["name"].as_str().unwrap()))
+                            .commands(commands_as_str)
+                            .build(),
+                    )
+                }
+            }
         }
 
         let workflow = WorkflowBuilder::new(workflow_name.as_str().unwrap().to_string())
@@ -106,6 +165,7 @@ impl Workflow {
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct WorkflowBuilder {
     name: String,
+    default: Vec<String>,
     tasks: Vec<Task>,
 }
 
@@ -113,6 +173,7 @@ impl WorkflowBuilder {
     pub fn new(name: String) -> WorkflowBuilder {
         WorkflowBuilder {
             name,
+            default: vec![],
             tasks: vec![],
         }
     }
@@ -127,9 +188,15 @@ impl WorkflowBuilder {
         self
     }
 
+    pub fn add_defaults(mut self, task_names: Vec<String>) -> WorkflowBuilder {
+        self.default = task_names;
+        self
+    }
+
     pub fn build(self) -> Workflow {
         Workflow {
             name: self.name,
+            default: self.default,
             tasks: self.tasks,
         }
     }
@@ -143,6 +210,7 @@ mod tests {
     fn get_expected_workflow() -> Workflow {
         Workflow {
             name: "my workflow".to_string(),
+            default: vec!["sample task1".to_string(), "sample task2".to_string()],
             tasks: vec![
                 Task {
                     name: "sample task1".to_string(),
@@ -168,6 +236,7 @@ mod tests {
             .build();
 
         let workflow = WorkflowBuilder::new("my workflow".to_string())
+            .add_defaults(vec![task1.name.clone(), task2.name.clone()])
             .add_task(task1)
             .add_task(task2)
             .build();
@@ -186,6 +255,7 @@ mod tests {
             .add_command("echo hello world".to_string())
             .build();
         let workflow = WorkflowBuilder::new("my workflow".to_string())
+            .add_defaults(vec![task1.name.clone(), task2.name.clone()])
             .add_tasks(vec![task1, task2])
             .build();
 
